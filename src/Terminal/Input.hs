@@ -25,6 +25,7 @@ enterCommand :: String -> IO ()
 enterCommand projectName = do
     Output.separator
     putStrLn projectName
+    putStrLn "Radler Engine"
     putStrLn "Enter Command"
     Output.separator
     Output.newLine
