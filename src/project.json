@@ -1,0 +1,11 @@
+{ 
+    "name": "alternation-piece-11",
+    "parts": [
+        { "name": "part-g.scr", "length": 48 },
+        { "name": "part-gs.scr", "length": 48 },
+        { "name": "part-gss.scr", "length": 48 }
+    ],
+    "voices": [ "p", "p", "n" ],
+    "seed": 14,
+    "timing-variance": 100
+}

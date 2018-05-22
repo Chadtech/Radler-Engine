@@ -1,12 +1,17 @@
 module Model where
 
 
+import qualified Data.Part as Part
+import qualified Data.Project as Project
+
 data Model
     = Model
-        { name :: String }
+        { project :: Project.Model
+        }
 
 
 dummy :: Model
 dummy =
     Model
-        { name = "alternation-piece-12" }
+        { project = Project.dummy 
+        }
