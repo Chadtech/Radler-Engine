@@ -1,4 +1,9 @@
-module Model where
+module Model 
+    ( Model
+    , name
+    , dummy
+    )
+    where
 
 
 import qualified Data.Part as Part
@@ -15,3 +20,8 @@ dummy =
     Model
         { project = Project.dummy 
         }
+
+
+name :: Model -> String
+name model =
+    Project.name (project model)

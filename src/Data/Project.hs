@@ -24,6 +24,9 @@ dummy :: Model
 dummy =
     Model 
     { name       = "alternation-piece-11"
-    , voices     = [] 
+    , parts = []
+    , voices = []
     , beatLength = 5000
     }
+
+
