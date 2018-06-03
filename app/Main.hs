@@ -9,10 +9,12 @@ import qualified Model
 import qualified Data.List as List
 import qualified Data.String as String
 
+
 main :: IO ()
 main = do
-    projectData <- Byte.readFile "./src/project.project"
-    putStrLn (parseLines projectData)
+    projectData <- Byte.readFile "./project.json"
+    putStrLn (getProjectString projectData)
+    ready
     Input.await Model.dummy
 
 
@@ -24,9 +26,8 @@ ready = do
     Output.newLine
 
 
-
-parseLines :: Byte.ByteString -> String
-parseLines projectData = 
+getProjectString :: Byte.ByteString -> String
+getProjectString projectData = 
     projectData
         |> Char.split '\n'
         |> List.map Char.unpack
