@@ -14,7 +14,7 @@ import Prelude (String, (++), show)
 
 data Problem
     = FieldIsntKeyValue String
-    | DebugFields [ (String, String ) ]
+    | FieldDoesNotExist String
 
 
 data Result a 
@@ -66,15 +66,18 @@ problemToString problem =
         FieldIsntKeyValue str ->
             "Field isnt key value -> " ++ str 
 
-        DebugFields fields ->
-            "These are fields -> " ++ (show (fieldsToString fields))
+        FieldDoesNotExist str ->
+            "Field does not exist -> " ++ str
+
+--         DebugFields fields ->
+--             "These are fields -> " ++ (show (fieldsToString fields))
 
 
-fieldsToString :: [ ( String, String ) ] -> String
-fieldsToString fields =
-    case fields of
-        (key, value) : rest ->
-            key ++ " : " ++ value ++ " , " ++ (fieldsToString rest)
+-- fieldsToString :: [ ( String, String ) ] -> String
+-- fieldsToString fields =
+--     case fields of
+--         (key, value) : rest ->
+--             key ++ " : " ++ value ++ " , " ++ (fieldsToString rest)
 
-        [] ->
-            "[]"
+--         [] ->
+--             "[]"

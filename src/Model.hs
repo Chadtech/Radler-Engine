@@ -1,7 +1,6 @@
 module Model 
     ( Model
     , name
-    , dummy
     , fromProjectData
     )
     where
@@ -19,13 +18,6 @@ import Flow
 data Model
     = Model
         { project :: Project.Model
-        }
-
-
-dummy :: Model
-dummy =
-    Model
-        { project = Project.dummy 
         }
 
 

@@ -1,9 +1,8 @@
 module Data.Project 
     ( Model
     , name
-    , voices
-    , beatLength
-    , dummy
+    -- , voices
+    -- , beatLength
     , fromString
     ) where
 
@@ -16,23 +15,15 @@ import Data.List.Split (splitOn)
 import Text.Regex.Posix
 import Flow
 import qualified Result
+import qualified Util
+
 
 data Model =
     Model
     { name :: String
     , parts :: [ Part.Model ]
-    , voices :: [ Voice ] 
-    , beatLength :: Int
-    }
-
-
-dummy :: Model
-dummy =
-    Model 
-    { name = "alternation-piece-11"
-    , parts  = []
-    , voices   = []
-    , beatLength = 5000
+    -- , voices :: [ Voice ] 
+    -- , beatLength :: Int
     }
 
 
@@ -46,16 +37,68 @@ fromString str =
         |> Result.andThen fromKeyValues
 
 
+construct 
+    :: [ (String, String) ] 
+    -> String 
+    -> (String -> Result.Result a) 
+    -> Result.Result (a -> b)
+    -> Result.Result b
+construct fields fieldName reader step =
+    case step of
+        Result.Ok ctor ->
+            case getField fields fieldName of
+                Just str ->
+                    case reader str of
+                        Result.Ok part ->
+                            Result.Ok (ctor part)
+
+                        Result.Err problem ->
+                            Result.Err problem
+
+                Nothing ->
+                    Result.Err (Result.FieldDoesNotExist fieldName)
+
+        Result.Err problem ->
+            Result.Err problem
+
+
+getField :: [ (String, String) ] -> String -> Maybe String
+getField fields key =
+    case fields of
+        (thisKey, thisVal) : rest ->
+            if (Util.log_ "KEY" show thisKey) == key then
+                Just (Util.log_ "VAL" (\x -> x) thisVal)
+            else
+                getField rest key
+
+        [] ->
+            Nothing
+
+
 fromKeyValues :: [ (String, String) ] -> Result.Result Model
 fromKeyValues fields =
-    Result.DebugFields fields
-        |> Result.Err
+    let
+        constructor =
+            construct fields
+    in
+    Result.Ok Model
+        |> constructor "name" readName
+        |> constructor "parts" Part.readMany
+
+
+readName :: String -> Result.Result String
+readName str =
+    Result.Ok str
+
 
 toKeyValues :: String -> Result.Result (String, String)
 toKeyValues str =
     case splitOn "=" str of
         key : value : [] ->
-            Result.Ok (key, value)
+            ( Util.dropLast (Util.trim key)
+            , Util.trim value
+            )
+                |> Result.Ok
 
         _ ->
             Result.FieldIsntKeyValue str
@@ -71,8 +114,10 @@ toFields lines =
         first : second : rest ->
             first : toFields (second : rest)
 
-        first : [] ->
-            first : []
+        _ ->
+            lines
+
+
 
 
 isntNewLine :: Char -> Bool

@@ -22,16 +22,16 @@ awaitIfLoaded :: Result.Result Model.Model -> IO ()
 awaitIfLoaded result =
     case result of
         Result.Ok model -> do
-            ready
+            ready (Model.name model)
             Input.await model
 
         Result.Err err -> do
             putStrLn (show (Result.problemToString err))
 
 
-ready :: IO ()
-ready = do
-    _ <- Output.say "ready"
+ready :: String -> IO ()
+ready str = do
+    _ <- Output.say ("ready " ++ str)
     Output.newLine
     putStrLn "Ready"
     Output.newLine
