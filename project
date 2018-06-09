@@ -1,0 +1,12 @@
+name = alternation-piece-11
+parts = 
+    "part-g.scr"; 48
+    "part-gs.scr"; 48
+    "part-gss.scr"; 48
+voices = 
+    p
+    p
+    n
+seed = 14
+timing-variance = 100
+beat-length = 5000

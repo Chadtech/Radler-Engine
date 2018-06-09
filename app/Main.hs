@@ -8,14 +8,25 @@ import Flow
 import qualified Model
 import qualified Data.List as List
 import qualified Data.String as String
+import qualified Result
+import qualified Debug.Trace as Debug
 
 
 main :: IO ()
 main = do
-    projectData <- Byte.readFile "./project.json"
-    putStrLn (getProjectString projectData)
-    ready
-    Input.await Model.dummy
+    projectData <- Byte.readFile "./project"
+    awaitIfLoaded (Model.fromProjectData projectData)
+
+
+awaitIfLoaded :: Result.Result Model.Model -> IO ()
+awaitIfLoaded result =
+    case result of
+        Result.Ok model -> do
+            ready
+            Input.await model
+
+        Result.Err err -> do
+            putStrLn (show (Result.problemToString err))
 
 
 ready :: IO ()
@@ -26,9 +37,3 @@ ready = do
     Output.newLine
 
 
-getProjectString :: Byte.ByteString -> String
-getProjectString projectData = 
-    projectData
-        |> Char.split '\n'
-        |> List.map Char.unpack
-        |> List.unlines

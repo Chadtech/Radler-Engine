@@ -6,10 +6,8 @@ import qualified Data.ByteString as Byte
     , ByteString
     )
 import qualified Data.ByteString.Char8 as Char
--- import Data.Int (Int16)
 import Prelude (IO, String, getLine, putStrLn)
--- import qualified Prelude hiding (map, foldr, writeFile, concat)
--- import Flow
+import Flow
 import System.Process (callCommand)
 import Data.List as List
 import qualified Data.Project as Project
