@@ -1,6 +1,7 @@
 module Model 
     ( Model
     , name
+    , project
     , fromProjectData
     )
     where

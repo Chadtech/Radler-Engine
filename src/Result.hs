@@ -15,6 +15,12 @@ import Prelude (String, (++), show)
 data Problem
     = FieldIsntKeyValue String
     | FieldDoesNotExist String
+    | PartStringCantBeSplitInTwo String
+    | PartLengthCouldNotBeParsed String
+    | UnrecognizedVoiceType String
+    | CouldNotParseSeed String
+    | CouldNotParseTimingVariance String
+    | CouldNotParseBeatLength String
 
 
 data Result a 
@@ -69,15 +75,21 @@ problemToString problem =
         FieldDoesNotExist str ->
             "Field does not exist -> " ++ str
 
---         DebugFields fields ->
---             "These are fields -> " ++ (show (fieldsToString fields))
+        PartStringCantBeSplitInTwo str ->
+            "part string cant be split in two -> " ++ str
 
+        PartLengthCouldNotBeParsed str ->
+            "part length could not be parsed -> " ++ show str
 
--- fieldsToString :: [ ( String, String ) ] -> String
--- fieldsToString fields =
---     case fields of
---         (key, value) : rest ->
---             key ++ " : " ++ value ++ " , " ++ (fieldsToString rest)
+        UnrecognizedVoiceType str ->
+            "unrecognized voice type -> " ++ show str
 
---         [] ->
---             "[]"
+        CouldNotParseSeed str ->
+            "could not parse into seed -> " ++ show str
+
+        CouldNotParseTimingVariance str ->
+            "could not parse timing variance -> " ++ show str
+
+        CouldNotParseBeatLength str ->
+            "could not parse beat length -> " ++ show str
+            

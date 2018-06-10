@@ -1,6 +1,7 @@
 module Util 
     ( trim
     , dropLast
+    , readInt
     , log_
     )
     where
@@ -9,17 +10,22 @@ import qualified Data.List as List
 import qualified Data.Char as Char
 import Flow
 import qualified Debug.Trace as Debug
-
+import Text.Read (readMaybe)
 
 
 trim :: String -> String
 trim = 
-    List.dropWhileEnd isntLetter
-        >> List.dropWhile isntLetter
+    List.dropWhileEnd Char.isSpace
+        >> List.dropWhile Char.isSpace
 
 isntLetter :: Char -> Bool
 isntLetter c =
     not (Char.isLetter c)
+
+
+readInt :: String -> Maybe Int
+readInt =
+    readMaybe
 
 
 dropLast :: String -> String

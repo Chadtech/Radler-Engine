@@ -22,7 +22,7 @@ awaitIfLoaded :: Result.Result Model.Model -> IO ()
 awaitIfLoaded result =
     case result of
         Result.Ok model -> do
-            ready (Model.name model)
+            ready ((Model.name model))
             Input.await model
 
         Result.Err err -> do

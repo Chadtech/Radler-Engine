@@ -1,13 +1,12 @@
 module Data.Project 
     ( Model
     , name
-    -- , voices
-    -- , beatLength
+    , parts
     , fromString
     ) where
 
 
-import Data.Voice (Voice)
+import qualified Data.Voice as Voice
 import qualified Data.Part as Part
 import qualified Result (Result)
 import qualified Data.List as List
@@ -22,8 +21,10 @@ data Model =
     Model
     { name :: String
     , parts :: [ Part.Model ]
-    -- , voices :: [ Voice ] 
-    -- , beatLength :: Int
+    , voices :: [ Voice.Model ] 
+    , seed :: Int
+    , timingVariance :: Int
+    , beatLength :: Int
     }
 
 
@@ -66,8 +67,8 @@ getField :: [ (String, String) ] -> String -> Maybe String
 getField fields key =
     case fields of
         (thisKey, thisVal) : rest ->
-            if (Util.log_ "KEY" show thisKey) == key then
-                Just (Util.log_ "VAL" (\x -> x) thisVal)
+            if thisKey == key then
+                Just thisVal
             else
                 getField rest key
 
@@ -78,17 +79,36 @@ getField fields key =
 fromKeyValues :: [ (String, String) ] -> Result.Result Model
 fromKeyValues fields =
     let
-        constructor =
+        ctor =
             construct fields
     in
     Result.Ok Model
-        |> constructor "name" readName
-        |> constructor "parts" Part.readMany
+        |> ctor "name" readName
+        |> ctor "parts" Part.readMany
+        |> ctor "voices" Voice.readMany
+        |> ctor "seed" (useInt Result.CouldNotParseSeed)
+        |> ctor "timing-variance" (useInt Result.CouldNotParseTimingVariance)
+        |> ctor "beat-length" (useInt Result.CouldNotParseBeatLength)
 
 
 readName :: String -> Result.Result String
 readName str =
     Result.Ok str
+
+
+useInt :: (String -> Result.Problem) -> String -> Result.Result Int
+useInt problemCtor str =
+    let
+        trimmedStr =
+            Util.trim str
+    in
+    case Util.readInt trimmedStr of
+        Just int ->
+            Result.Ok int
+
+        Nothing ->
+            problemCtor trimmedStr
+                |> Result.Err
 
 
 toKeyValues :: String -> Result.Result (String, String)
@@ -117,14 +137,3 @@ toFields lines =
         _ ->
             lines
 
-
-
-
-isntNewLine :: Char -> Bool
-isntNewLine c =
-    c /= '\n'
-
-
-isNewField :: String -> Bool
-isNewField str =
-    str =~ "^[a-z]*"
