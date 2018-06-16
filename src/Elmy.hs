@@ -11,3 +11,13 @@ head list =
             Just first
 
 
+type List a = [ a ]
+
+
+infixl 0 <<
+(<<) = leftCompose
+
+
+leftCompose :: (b -> c) -> (a -> b) -> a -> c
+leftCompose f g v =
+    f (g v)

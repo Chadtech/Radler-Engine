@@ -1,5 +1,7 @@
 module Data.Project 
     ( Model
+    , Error
+    , throw
     , name
     , parts
     , fromString
@@ -8,13 +10,17 @@ module Data.Project
 
 import qualified Data.Voice as Voice
 import qualified Data.Part as Part
-import qualified Result (Result)
+import qualified Result
+import Result (Result(Ok, Err))
 import qualified Data.List as List
 import Data.List.Split (splitOn)
 import Text.Regex.Posix
 import Flow
-import qualified Result
 import qualified Util
+import Elmy ((<<))
+
+
+-- TYPES --
 
 
 data Model =
@@ -28,75 +34,64 @@ data Model =
     }
 
 
-fromString :: String -> Result.Result Model
+type Parser a b =
+    Result Error (a -> b) -> Result Error b
+
+
+-- PUBLIC --
+
+
+fromString :: String -> Result Error Model
 fromString str =
     splitOn "\n" str
         |> toFields
         |> List.filter ((/=) "")
         |> List.map toKeyValues
         |> Result.join
-        |> Result.andThen fromKeyValues
+        |> Result.andThen parse
 
 
-construct 
-    :: [ (String, String) ] 
-    -> String 
-    -> (String -> Result.Result a) 
-    -> Result.Result (a -> b)
-    -> Result.Result b
-construct fields fieldName reader step =
-    case step of
-        Result.Ok ctor ->
-            case getField fields fieldName of
-                Just str ->
-                    case reader str of
-                        Result.Ok part ->
-                            Result.Ok (ctor part)
-
-                        Result.Err problem ->
-                            Result.Err problem
-
-                Nothing ->
-                    Result.Err (Result.FieldDoesNotExist fieldName)
-
-        Result.Err problem ->
-            Result.Err problem
+-- PRIVATE --
 
 
-getField :: [ (String, String) ] -> String -> Maybe String
+parse :: [ (String, String) ] -> Result Error Model
+parse fields =
+    let
+        ctor :: String -> (String -> Result Error a) -> Parser a b
+        ctor key reader =
+            Result.andThen 
+                reader 
+                (getField fields key)
+                |> Result.map2 (|>)
+    in
+    Ok Model
+        |> ctor "name" readName
+        |> ctor "parts" (Result.mapError PartError << Part.readMany)
+        |> ctor "voices" (Result.mapError VoiceError << Voice.readMany)
+        |> ctor "seed" (useInt CouldNotParseSeed)
+        |> ctor "timing-variance" (useInt CouldNotParseTimingVariance)
+        |> ctor "beat-length" (useInt CouldNotParseBeatLength)
+
+
+getField :: [ (String, String) ] -> String -> Result Error String
 getField fields key =
     case fields of
         (thisKey, thisVal) : rest ->
             if thisKey == key then
-                Just thisVal
+                Ok thisVal
             else
                 getField rest key
 
         [] ->
-            Nothing
+            Err (FieldDoesNotExist key)
 
 
-fromKeyValues :: [ (String, String) ] -> Result.Result Model
-fromKeyValues fields =
-    let
-        ctor =
-            construct fields
-    in
-    Result.Ok Model
-        |> ctor "name" readName
-        |> ctor "parts" Part.readMany
-        |> ctor "voices" Voice.readMany
-        |> ctor "seed" (useInt Result.CouldNotParseSeed)
-        |> ctor "timing-variance" (useInt Result.CouldNotParseTimingVariance)
-        |> ctor "beat-length" (useInt Result.CouldNotParseBeatLength)
-
-
-readName :: String -> Result.Result String
+readName :: String -> Result Error String
 readName str =
-    Result.Ok str
+    Ok str
 
 
-useInt :: (String -> Result.Problem) -> String -> Result.Result Int
+useInt :: (String -> Error) -> String -> Result Error Int
 useInt problemCtor str =
     let
         trimmedStr =
@@ -104,25 +99,25 @@ useInt problemCtor str =
     in
     case Util.readInt trimmedStr of
         Just int ->
-            Result.Ok int
+            Ok int
 
         Nothing ->
             problemCtor trimmedStr
-                |> Result.Err
+                |> Err
 
 
-toKeyValues :: String -> Result.Result (String, String)
+toKeyValues :: String -> Result Error (String, String)
 toKeyValues str =
     case splitOn "=" str of
         key : value : [] ->
             ( Util.dropLast (Util.trim key)
             , Util.trim value
             )
-                |> Result.Ok
+                |> Ok
 
         _ ->
-            Result.FieldIsntKeyValue str
-                |> Result.Err
+            FieldIsntKeyValue str
+                |> Err
 
 
 toFields :: [ String ] -> [ String ]
@@ -137,3 +132,39 @@ toFields lines =
         _ ->
             lines
 
+
+-- ERROR --
+
+
+data Error
+    = FieldIsntKeyValue String
+    | FieldDoesNotExist String
+    | CouldNotParseSeed String
+    | CouldNotParseTimingVariance String
+    | CouldNotParseBeatLength String
+    | PartError Part.Error
+    | VoiceError Voice.Error
+
+
+throw :: Error -> String
+throw error =
+    "Project Error -> \n    " ++ errorToString error
+
+
+errorToString :: Error -> String
+errorToString error =
+    case error of
+        FieldIsntKeyValue str ->
+            "Field isnt key value -> " ++ show str 
+
+        FieldDoesNotExist str ->
+            "Field does not exist -> " ++ show str
+
+        CouldNotParseSeed str ->
+            "could not parse into seed -> " ++ show str
+
+        CouldNotParseTimingVariance str ->
+            "could not parse timing variance -> " ++ show str
+
+        CouldNotParseBeatLength str ->
+            "could not parse beat length -> " ++ show str

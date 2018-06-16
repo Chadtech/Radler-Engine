@@ -1,10 +1,10 @@
 module Result
     ( Result(..)
-    , Problem(..)
     , map
+    , mapError
+    , map2
     , andThen
     , join
-    , problemToString
     )
     where
 
@@ -12,33 +12,45 @@ module Result
 import Prelude (String, (++), show)
 
 
-data Problem
-    = FieldIsntKeyValue String
-    | FieldDoesNotExist String
-    | PartStringCantBeSplitInTwo String
-    | PartLengthCouldNotBeParsed String
-    | UnrecognizedVoiceType String
-    | CouldNotParseSeed String
-    | CouldNotParseTimingVariance String
-    | CouldNotParseBeatLength String
+data Result e v
+    = Ok v
+    | Err e
 
 
-data Result a 
-    = Ok a
-    | Err Problem
-
-
-map :: (a -> b) -> Result a -> Result b
+map :: (a -> b) -> Result e a -> Result e b
 map f result =
     case result of
         Ok v ->
             Ok (f v)
 
-        Err problem ->
-            Err problem
+        Err error ->
+            Err error
 
 
-andThen :: (a -> Result b) -> Result a -> Result b
+mapError :: (a -> b) -> Result a v -> Result b v
+mapError f result =
+    case result of
+        Ok v ->
+            Ok v
+
+        Err error ->
+            Err (f error)
+
+
+map2 :: (a -> b -> c) -> Result e a -> Result e b -> Result e c
+map2 f ra rb =
+    case (ra, rb) of
+      (Ok a, Ok b) -> 
+        Ok (f a b)
+
+      (Err x, _) -> 
+        Err x
+
+      (_, Err x) ->
+        Err x
+
+
+andThen :: (a -> Result e b) -> Result e a -> Result e b
 andThen f result =
     case result of
         Ok v ->
@@ -48,12 +60,12 @@ andThen f result =
             Err problem
 
 
-join :: [ Result a ] -> Result [ a ]
+join :: [ Result e a ] -> Result e [ a ]
 join results =
     joinHelp results []
 
 
-joinHelp :: [ Result a ] -> [ a ] -> Result [ a ]
+joinHelp :: [ Result e a ] -> [ a ] -> Result e [ a ]
 joinHelp results vs =
     case results of
         Ok v : rest ->
@@ -64,32 +76,3 @@ joinHelp results vs =
 
         [] ->
             Ok vs
-
-
-problemToString :: Problem -> String
-problemToString problem =
-    case problem of
-        FieldIsntKeyValue str ->
-            "Field isnt key value -> " ++ str 
-
-        FieldDoesNotExist str ->
-            "Field does not exist -> " ++ str
-
-        PartStringCantBeSplitInTwo str ->
-            "part string cant be split in two -> " ++ str
-
-        PartLengthCouldNotBeParsed str ->
-            "part length could not be parsed -> " ++ show str
-
-        UnrecognizedVoiceType str ->
-            "unrecognized voice type -> " ++ show str
-
-        CouldNotParseSeed str ->
-            "could not parse into seed -> " ++ show str
-
-        CouldNotParseTimingVariance str ->
-            "could not parse timing variance -> " ++ show str
-
-        CouldNotParseBeatLength str ->
-            "could not parse beat length -> " ++ show str
-            

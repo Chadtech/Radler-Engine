@@ -1,17 +1,23 @@
 module Data.Part 
-    ( readMany
+    ( Model
+    , Error
+    , throw
+    , readMany
     , file
-    , Model
     )
     where
 
 import qualified Result
+import Result (Result(Ok, Err))
 import qualified Debug.Trace as Debug
 import qualified Util
 import Data.List.Split (splitOn)
 import Data.List as List
 import Flow
 import qualified Util
+
+
+-- TYPES --
 
 
 data Model
@@ -21,18 +27,32 @@ data Model
         }
 
 
-fromString :: String -> Result.Result Model
+-- PUBLIC --
+
+
+readMany :: String -> Result Error [ Model ]
+readMany str =
+    str
+        |> splitOn ","
+        |> List.map fromString
+        |> Result.join
+
+
+-- PRIVATE --
+
+
+fromString :: String -> Result Error Model
 fromString str =
     case splitOn ";" (Util.trim str) of
         fileName : lengthStr : [] ->
             fromTwoStrings fileName (Util.trim lengthStr)
 
         _ ->
-            Result.PartStringCantBeSplitInTwo str
-                |> Result.Err
+            StringCantBeSplitInTwo str
+                |> Err
 
 
-fromTwoStrings :: String -> String -> Result.Result Model
+fromTwoStrings :: String -> String -> Result Error Model
 fromTwoStrings fileName lengthStr =
     case Util.readInt lengthStr of
         Just length_ ->
@@ -40,18 +60,32 @@ fromTwoStrings fileName lengthStr =
                 { file = fileName
                 , length_ = length_
                 }
-                |> Result.Ok
+                |> Ok
 
         Nothing ->
-            Result.PartLengthCouldNotBeParsed lengthStr
-                |> Result.Err
+            LengthCouldNotBeParsed lengthStr
+                |> Err
 
 
+-- ERROR --
 
 
-readMany :: String -> Result.Result [ Model ]
-readMany str =
-    str
-        |> splitOn ","
-        |> List.map fromString
-        |> Result.join
+data Error
+    = LengthCouldNotBeParsed String
+    | StringCantBeSplitInTwo String
+
+
+throw :: Error -> String
+throw error =
+    "Part error -> \n    " ++ errorToString error
+
+
+errorToString :: Error -> String
+errorToString error =
+    case error of
+        StringCantBeSplitInTwo str ->
+            "part string cant be split in two -> " ++ show str
+
+        LengthCouldNotBeParsed str ->
+            "part length could not be parsed -> " ++ show str
+

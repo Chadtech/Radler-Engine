@@ -1,8 +1,7 @@
 name = alternation-piece-11
 parts = 
-    part-g.scr; 48,
-    part-gs.scr; 48,
-    part-gss.scr; 48
+    ./score/part-a.scr; 48,
+    ./score/part-b.scr; 48
 voices = 
     p,
     p,

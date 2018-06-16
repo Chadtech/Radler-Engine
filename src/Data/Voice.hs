@@ -1,6 +1,8 @@
 module Data.Voice 
     ( Model
+    , Error
     , readMany
+    , throw
     ) 
     where
 
@@ -8,10 +10,14 @@ module Data.Voice
 import Data.Int (Int16)
 import Data.Note (Note)
 import qualified Result
+import Result (Result(Ok, Err))
 import Flow
 import Data.List as List
 import Data.List.Split (splitOn)
 import qualified Util
+
+
+-- TYPES -- 
 
 
 data Model 
@@ -24,24 +30,42 @@ data Model
     -- -- }
 
 
-
-fromString :: String -> Result.Result Model
+fromString :: String -> Result Error Model
 fromString str =
     case Util.trim str of
         "p" ->
-            Result.Ok P
+            Ok P
 
         "n" ->
-            Result.Ok N
+            Ok N
 
         _ ->
-            Result.UnrecognizedVoiceType str
-                |> Result.Err
+            UnrecognizedVoiceType str
+                |> Err
 
 
-readMany :: String -> Result.Result [ Model ]
+readMany :: String -> Result Error [ Model ]
 readMany str =
     str
         |> splitOn ","
         |> List.map fromString
         |> Result.join
+
+
+-- Error -- 
+
+
+data Error
+    = UnrecognizedVoiceType String
+
+
+throw :: Error -> String
+throw error =
+    "Voice Error -> \n    " ++ errorToString error
+
+
+errorToString :: Error -> String
+errorToString error =
+    case error of
+        UnrecognizedVoiceType str ->
+            "unrecognized voice type -> " ++ str

@@ -2,14 +2,18 @@ module Main where
 
 import qualified Terminal.Output as Output
 import qualified Terminal.Input as Input
-import qualified Data.ByteString as Byte (readFile, ByteString)
+import qualified Data.ByteString as Byte
 import qualified Data.ByteString.Char8 as Char
 import Flow
 import qualified Model
+import Model (Model)
 import qualified Data.List as List
 import qualified Data.String as String
 import qualified Result
+import Result (Result(Err, Ok))
 import qualified Debug.Trace as Debug
+import qualified Error
+import Error (Error)
 
 
 main :: IO ()
@@ -18,15 +22,15 @@ main = do
     awaitIfLoaded (Model.fromProjectData projectData)
 
 
-awaitIfLoaded :: Result.Result Model.Model -> IO ()
+awaitIfLoaded :: Result Error Model -> IO ()
 awaitIfLoaded result =
     case result of
-        Result.Ok model -> do
-            ready ((Model.name model))
+        Ok model -> do
+            ready (Model.name model)
             Input.await model
 
-        Result.Err err -> do
-            putStrLn (show (Result.problemToString err))
+        Err err -> do
+            putStrLn (Error.throw err)
 
 
 ready :: String -> IO ()
