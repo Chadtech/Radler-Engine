@@ -40,4 +40,3 @@ ready str = do
     putStrLn "Ready"
     Output.newLine
 
-

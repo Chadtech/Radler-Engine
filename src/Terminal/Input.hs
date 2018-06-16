@@ -14,6 +14,7 @@ import qualified Data.Project as Project
 import Terminal.Output as Output
 import Elmy
 import qualified Model
+import Model (Model)
 import Update (update)
 import Data.Maybe
 import qualified Msg
@@ -29,7 +30,7 @@ enterCommand projectName = do
     Output.newLine
 
 
-await :: Model.Model -> IO ()
+await :: Model -> IO ()
 await model = do
     enterCommand (Model.name model)
     str <- getLine
@@ -37,7 +38,7 @@ await model = do
     Output.newLine
 
 
-handleUpdate :: (Model.Model, Maybe (IO ())) -> IO ()
+handleUpdate :: (Model, Maybe (IO ())) -> IO ()
 handleUpdate (model, maybeIo) =
     case maybeIo of
         Just io -> do
